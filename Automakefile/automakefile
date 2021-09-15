@@ -1,0 +1,86 @@
+#!/bin/bash
+##
+## EPITECH PROJECT, 2021
+## automakefile
+## File description:
+## generate makefiles
+##
+
+declare -i nbr_of_lines
+nbr_of_lines=`wc -l $1 | cut -f 1 -d ' ' `
+export nbr_of_lines
+
+declare -i line_number=1
+export line_number
+
+if test -z $1
+then
+    exit 84
+fi
+
+if test ! -s $1
+then
+    exit 84
+fi
+
+if test ! -f $1
+then
+   exit 84
+else
+    IFS=';'
+    cat $1 | while read line
+    do
+        my_array=($line)
+        if  [[ ${my_array[0]} == "main.c" ]]
+        then
+            file=${my_array[0]}
+        elif [[ ${my_array[0]} == "PROJECT_DIR" ]]
+        then
+            project_dir=${my_array[1]}
+            if test ! -d $project_dir
+            then
+                exit 84
+            fi
+        elif [[ ${my_array[0]} == "SOURCES_DIR" ]]
+        then
+            sources_dir=${my_array[1]}
+        elif [[ ${my_array[0]} == "HEADERS_DIR" ]]
+        then
+            headers_dir=${my_array[1]}
+        elif [[ ${my_array[0]} == "LIBS_DIR" ]]
+        then
+            libs_dir=${my_array[1]}
+        elif [[ ${my_array[0]} == "EXEC" ]]
+        then
+            executable_name=${my_array[1]}
+        elif [[ ${my_array[0]} == "CC" ]]
+        then
+            compilator_binary=${my_array[1]}
+        elif [[ ${my_array[0]} == "CFLAGS" ]]
+        then
+            compilation_flags=${my_array[1]}
+        fi
+
+        if [ $line_number -eq $nbr_of_lines ]
+        then
+            makefile="$project_dir/Makefile"
+            touch $makefile
+            echo -e "SRC\t\t=\t\t$file" >> $makefile
+            echo -e "OBJ\t\t=\$(SRC:.c=.o)" >> $makefile
+            echo -e "NAME\t\t=\t\t$executable_name" >> $makefile
+            echo -e "CC\t\t=\t\t$compilator_binary" >> $makefile
+            echo -e "CFLAGS\t\t=\t\t$compilation_flags" >> $makefile
+            echo -e "LDFLAGS\t\t=\t\t -I ./$headers_dir" >> $makefile
+            echo -e "all:\$(NAME)" >> $makefile
+            echo -e "\$(NAME):\$(OBJ)" >> $makefile
+##                   echo -e "\tmake -C $libs_dir" >> $makefile
+            echo -e "\t\$(CC) -o \$(NAME) \$(OBJ) \$(LDFLAGS) \$(CFLAGS)" >> $makefile
+            echo -e "clean:" >> $makefile
+            echo -e "\trm -f \$(OBJ)" >> $makefile
+            echo -e "fclean: clean" >> $makefile
+            echo -e "\trm -f \$(NAME)" >> $makefile
+            echo -e "re: fclean all" >> $makefile
+        fi
+        let line_number+=1
+    done
+fi
